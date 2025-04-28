@@ -2,7 +2,7 @@ import { ArrowButton } from 'src/ui/arrow-button';
 import { Button } from 'src/ui/button';
 
 import styles from './ArticleParamsForm.module.scss';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
 	ArticleStateType,
 	backgroundColors,
@@ -14,44 +14,15 @@ import {
 	OptionType,
 } from 'src/constants/articleProps';
 import clsx from 'clsx';
+import { Text } from 'src/ui/text';
 import { Select } from 'src/ui/select';
 import { RadioGroup } from 'src/ui/radio-group';
 import { Separator } from 'src/ui/separator';
+import { useOutsideClickClose } from 'src/hooks/useOutsideClickClose';
 
 type ArticleParamsFormProps = {
-	setCurrentArticleState: (param: ArticleStateType) => any;
+	setCurrentArticleState: (param: ArticleStateType) => void;
 	currentArticleState: ArticleStateType;
-};
-
-type UseOutsideClickClose = {
-	isOpen: boolean;
-	onChange: (newValue: boolean) => void;
-	onClose?: () => void;
-	rootRef: React.RefObject<HTMLDivElement>;
-};
-
-const useOutsideClickClose = ({
-	isOpen,
-	rootRef,
-	onClose,
-	onChange,
-}: UseOutsideClickClose) => {
-	useEffect(() => {
-		const handleClick = (event: MouseEvent) => {
-			event.stopPropagation();
-			const { target } = event;
-			if (target instanceof Node && !rootRef.current?.contains(target)) {
-				isOpen && onClose?.();
-				onChange?.(false);
-			}
-		};
-
-		window.addEventListener('mousedown', handleClick);
-
-		return () => {
-			window.removeEventListener('mousedown', handleClick);
-		};
-	}, [onClose, onChange, isOpen]);
 };
 
 export const ArticleParamsForm = ({
@@ -71,6 +42,18 @@ export const ArticleParamsForm = ({
 		setIsOpen((prevState) => !prevState);
 	};
 
+	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		setCurrentArticleState(selectArticleState);
+		setIsOpen(false);
+	};
+
+	const handleReset = () => {
+		setCurrentArticleState(defaultArticleState);
+		setSelectArticleState(defaultArticleState);
+		setIsOpen(false);
+	};
+
 	useOutsideClickClose({
 		isOpen,
 		rootRef,
@@ -84,17 +67,14 @@ export const ArticleParamsForm = ({
 			<aside
 				className={clsx(styles.container, { [styles.container_open]: isOpen })}>
 				<form
-					className={clsx(styles.form)}
-					onSubmit={(event) => {
-						event.preventDefault();
-						setCurrentArticleState(selectArticleState);
-						setIsOpen(false);
-					}}
-					onReset={() => {
-						setCurrentArticleState(defaultArticleState);
-						setSelectArticleState(defaultArticleState);
-						setIsOpen(false);
-					}}>
+					className={styles.form}
+					onSubmit={handleSubmit}
+					onReset={handleReset}>
+					<Text as='h2' size={31} weight={800} uppercase={true}>
+						{' '}
+						задайте параметры{' '}
+					</Text>
+
 					<Select
 						selected={selectArticleState.fontFamilyOption}
 						options={fontFamilyOptions}
@@ -133,7 +113,7 @@ export const ArticleParamsForm = ({
 						title='Ширина контента'
 					/>
 
-					<div className={clsx(styles.bottomContainer)}>
+					<div className={styles.bottomContainer}>
 						<Button title='Сбросить' htmlType='reset' type='clear' />
 						<Button title='Применить' htmlType='submit' type='apply' />
 					</div>
